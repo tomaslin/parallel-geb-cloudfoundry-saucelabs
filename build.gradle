@@ -1,0 +1,35 @@
+import org.gradle.cf.DeleteApplicationCloudFoundryTask
+import org.gradle.cf.DeleteServiceCloudFoundryTask
+
+buildscript{
+  repositories{
+      mavenCentral()
+      maven{
+        url = 'http://repo.springframework.org/milestone'
+      }
+  }
+  dependencies{
+      classpath group: 'org.gradle.api.plugins', name: 'gradle-cf-plugin', version: '0.2.0'
+  }
+}
+
+apply plugin: 'cloudfoundry'
+
+task deleteApplications( type: DeleteApplicationCloudFoundryTask ){
+    username =cfUsername
+    password =cfPassword
+    application = '*'
+}
+
+task deleteServices( type: DeleteServiceCloudFoundryTask ){
+    username = cfUsername
+    password = cfPassword
+    serviceName = '*'
+}
+
+// ./gradlew -PcfUsername='tomaslin+saucelabsDemo@gmail.com' -PcfPassword='mypassword' nuke
+task nuke( dependsOn: [deleteApplications, deleteServices] )
+
+task deploy( dependsOn: nuke ){
+
+}
