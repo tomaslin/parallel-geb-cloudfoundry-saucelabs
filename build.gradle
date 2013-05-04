@@ -1,5 +1,6 @@
 import org.gradle.cf.DeleteApplicationCloudFoundryTask
 import org.gradle.cf.DeleteServiceCloudFoundryTask
+import org.gradle.cf.PushApplicationCloudFoundryTask
 
 buildscript{
   repositories{
@@ -27,9 +28,33 @@ task deleteServices( type: DeleteServiceCloudFoundryTask ){
     serviceName = '*'
 }
 
-// ./gradlew -PcfUsername='tomaslin+saucelabsDemo@gmail.com' -PcfPassword='mypassword' nuke
-task nuke( dependsOn: [deleteApplications, deleteServices] )
+// ./gradlew -PcfUsername='myusername@email.com' -PcfPassword='mypassword' nuke
+task nuke(dependsOn: [deleteApplications, deleteServices]){
+	description = 'removes all services and applications from the cloud'
+	group = 'demo'
+}
 
-task deploy( dependsOn: nuke ){
+def deployTasks = tasks.matching { task ->
+  task.name.startsWith("deploy${appName}")
+}
 
+4.times{ variant -> 
+
+	def app = "${appName}${variant}"
+
+	tasks.create( name: "deploy${app}", type: PushApplicationCloudFoundryTask ){
+		username = cfUsername
+	    password = cfPassword
+		group = 'demo'
+		application = "${app}"
+		framework = 'grails'
+		runtime = 'java7'
+		memory = 512
+		uris = ["${app}.cloudfoundry.com" as String]
+		file = file('target/geb-example-grails-0.1.war')
+	}
+}
+
+task deployAll(dependsOn: deployTasks){
+	group = 'demo'
 }
